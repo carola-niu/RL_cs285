@@ -65,19 +65,19 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
             if hasattr(env, 'sim'):
                 image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
             else:
-                image_obs.append(env.render(mode=render_mode))
+                image_obs.append(env.render())
         obs.append(ob)
         ac = policy.get_action(ob)
         ac = ac[0]
         acs.append(ac)
 
-        ob, rew, done, _ =env.step(ac)
+        ob, rew, done, _ = env.step(ac)
 
         step += 1
         next_obs.append(ob)
         rewards.append(rew)
 
-        rollout_done = done or step >= max_path_length
+        rollout_done = int(done or step == max_path_length)
         terminals.append(rollout_done)
 
         if rollout_done:
@@ -112,7 +112,7 @@ def Path(obs, image_obs, acs, rewards, next_obs, terminals):
     if image_obs != []:
         image_obs = np.stack(image_obs, axis=0)
     return {"observation" : np.array(obs, dtype=np.float32),
-            "image_obs" : np.array(image_obs, dtype=np.uint8),
+            "image_obs" : np.array(image_obs, dtype=np.float32),
             "reward" : np.array(rewards, dtype=np.float32),
             "action" : np.array(acs, dtype=np.float32),
             "next_observation": np.array(next_obs, dtype=np.float32),
