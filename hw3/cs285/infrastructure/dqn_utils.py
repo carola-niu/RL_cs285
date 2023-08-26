@@ -2,7 +2,7 @@
 implementing DQN."""
 import random
 from collections import namedtuple
-
+import ipdb
 import gym
 import numpy as np
 from torch import nn
@@ -93,7 +93,7 @@ class Ipdb(nn.Module):
     def __init__(self):
         super().__init__()
     def forward(self, x):
-        import ipdb; ipdb.set_trace()
+        ipdb.set_trace()
         return x
 
 
@@ -291,7 +291,7 @@ def compute_exponential_averages(variables, decay):
         Op to be run to update the averages with current value
         of variables.
     """
-    averager = tf.train.ExponentialMovingAverage(decay=decay)
+    averager = torch.train.ExponentialMovingAverage(decay=decay)
     apply_op = averager.apply(variables)
     return [averager.average(v) for v in variables], apply_op
 
@@ -303,7 +303,7 @@ def minimize_and_clip(optimizer, objective, var_list, clip_val=10):
     gradients = optimizer.compute_gradients(objective, var_list=var_list)
     for i, (grad, var) in enumerate(gradients):
         if grad is not None:
-            gradients[i] = (tf.clip_by_norm(grad, clip_val), var)
+            gradients[i] = (torch.clip_by_norm(grad, clip_val), var)
     return optimizer.apply_gradients(gradients)
 
 def initialize_interdependent_variables(session, vars_list, feed_dict):
@@ -315,8 +315,8 @@ def initialize_interdependent_variables(session, vars_list, feed_dict):
         new_vars_left = []
         for v in vars_left:
             try:
-                session.run(tf.variables_initializer([v]), feed_dict)
-            except tf.errors.FailedPreconditionError:
+                session.run(torch.variables_initializer([v]), feed_dict)
+            except torch.errors.FailedPreconditionError:
                 new_vars_left.append(v)
         if len(new_vars_left) >= len(vars_left):
             # This can happen if the variables all depend on each other, or more likely if there's

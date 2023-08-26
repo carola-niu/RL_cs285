@@ -55,7 +55,33 @@ def mean_squared_error(a, b):
 ############################################
 
 def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array')):
-    # TODO: get this from hw1 or hw2
+    ob = env.reset()
+    obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
+    steps = 0
+    while True:
+        if render:
+            if hasattr(env, 'sim'):
+                if 'track' in env.env.model.camera_names:
+                    image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
+                else:
+                    image_obs.append(env.sim.render(height=500, width=500)[::-1])
+        obs.append(ob)
+        ac = policy.get_action(ob)
+        ac = ac[0]
+        acs.append(ac)
+        ob, rew, done, _ = env.step(ac)
+
+        steps += 1
+        next_obs.append(ob)
+        rewards.append(rew)
+
+        rollout_done = int (done or steps == max_path_length)
+        terminals.append(rollout_done)
+
+        if rollout_done:
+            break
+    return Path(obs, image_obs, acs, rewards, next_obs, terminals)
+
 
 def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, render=False, render_mode=('rgb_array')):
     """
@@ -63,14 +89,28 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
         until we have collected min_timesteps_per_batch steps
     """
     # TODO: get this from hw1 or hw2
+    timestep_this_batch = 0
+    paths = []
 
-    return paths, timesteps_this_batch
+    while timestep_this_batch < min_timesteps_per_batch:
+        path = sample_trajectory(env, policy, max_path_length, render, render_mode)
+        paths.append(path)
+        timestep_this_batch += get_pathlength(path)
+        print('At timestep:    ', timestep_this_batch, '/', min_timesteps_per_batch, end='\r')
+
+    return paths, timestep_this_batch
+
+    
 
 def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, render_mode=('rgb_array')):
     """
         Collect ntraj rollouts using policy
     """
     # TODO: get this from hw1 or hw2
+    paths = []
+    for _ in range(ntraj):
+        path = sample_trajectory(env, policy, max_path_length, render, render_mode)
+        paths.append(path)
 
     return paths
 
